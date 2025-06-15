@@ -9,8 +9,8 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install yt-dlp with break-system-packages (safe in Docker)
-RUN pip3 install --break-system-packages yt-dlp
+# Install latest yt-dlp from GitHub (most recent fixes)
+RUN pip3 install --break-system-packages --upgrade git+https://github.com/yt-dlp/yt-dlp.git
 
 # Verify yt-dlp installation
 RUN yt-dlp --version

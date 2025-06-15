@@ -117,37 +117,54 @@ async function executeYtDlp(args, options = {}) {
 async function executeYouTubeMultiFallback(sanitizedArgs) {
   const strategies = [
     {
-      name: 'iOS Client',
+      name: 'iOS Client (Latest)',
       args: [
-        '--user-agent', '"Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15"',
+        '--user-agent', '"Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15"',
         '--extractor-args', '"youtube:player_client=ios"',
-        '--no-check-certificates'
+        '--extractor-args', '"youtube:player_skip=configs"',
+        '--no-check-certificates',
+        '--geo-bypass'
       ]
     },
     {
-      name: 'Android TV Client',
+      name: 'Android Client (Latest)',
+      args: [
+        '--user-agent', '"com.google.android.youtube/19.09.37 (Linux; U; Android 13) gzip"',
+        '--extractor-args', '"youtube:player_client=android"',
+        '--extractor-args', '"youtube:player_skip=configs"',
+        '--no-check-certificates',
+        '--geo-bypass'
+      ]
+    },
+    {
+      name: 'TV Embedded Client',
       args: [
         '--user-agent', '"Mozilla/5.0 (SMART-TV; LINUX; Tizen 6.0) AppleWebKit/537.36"',
         '--extractor-args', '"youtube:player_client=tv_embedded"',
-        '--no-check-certificates'
-      ]
-    },
-    {
-      name: 'Mobile Web Client',
-      args: [
-        '--user-agent', '"Mozilla/5.0 (Linux; Android 11; SM-G991B) AppleWebKit/537.36"',
-        '--extractor-args', '"youtube:player_client=mweb"',
+        '--extractor-args', '"youtube:player_skip=configs"',
         '--no-check-certificates',
-        '--sleep-interval', '3'
+        '--geo-bypass'
       ]
     },
     {
-      name: 'Basic Web Client',
+      name: 'Web Client (Minimal)',
       args: [
         '--user-agent', '"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"',
         '--extractor-args', '"youtube:player_client=web"',
+        '--extractor-args', '"youtube:player_skip=configs,webpage"',
         '--no-check-certificates',
-        '--sleep-interval', '5'
+        '--geo-bypass',
+        '--sleep-interval', '2'
+      ]
+    },
+    {
+      name: 'Age Gate Bypass',
+      args: [
+        '--user-agent', '"Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"',
+        '--extractor-args', '"youtube:player_client=web"',
+        '--extractor-args', '"youtube:skip=dash,hls"',
+        '--no-check-certificates',
+        '--age-limit', '0'
       ]
     }
   ];
