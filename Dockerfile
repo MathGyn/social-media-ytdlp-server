@@ -1,13 +1,16 @@
-# Use Node.js 18 with Alpine Linux for smaller image
-FROM node:18-alpine
+# Use Node.js 18 with Debian (better compatibility than Alpine)
+FROM node:18
 
 # Install system dependencies including Python and yt-dlp
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y \
     python3 \
-    py3-pip \
+    python3-pip \
     ffmpeg \
     curl \
-    && pip3 install --no-cache-dir yt-dlp
+    && rm -rf /var/lib/apt/lists/*
+
+# Install yt-dlp
+RUN pip3 install yt-dlp
 
 # Verify yt-dlp installation
 RUN yt-dlp --version
@@ -19,16 +22,13 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install Node.js dependencies
-RUN npm ci --only=production
+RUN npm install --production
 
 # Copy application code
 COPY . .
 
 # Create non-root user for security
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nodejs -u 1001
-
-# Change ownership of the app directory
+RUN useradd -m -u 1001 nodejs
 RUN chown -R nodejs:nodejs /app
 USER nodejs
 
