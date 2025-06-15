@@ -88,19 +88,23 @@ function sanitizeCommand(input) {
 async function executeYtDlp(args, options = {}) {
   const sanitizedArgs = args.map(arg => sanitizeCommand(arg));
   
-  // Add anti-bot measures for YouTube
+  // Enhanced anti-bot measures for YouTube
   const antiBot = [
     '--user-agent', '"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"',
     '--referer', '"https://www.google.com/"',
-    '--sleep-interval', '1',
-    '--max-sleep-interval', '3'
+    '--sleep-interval', '2',
+    '--max-sleep-interval', '5',
+    '--socket-timeout', '30'
   ];
   
-  // Add extractor args for YouTube specifically
+  // Enhanced extractor args for YouTube specifically
   if (options.isYoutube) {
     antiBot.push(
-      '--extractor-args', '"youtube:player_client=web,mweb"',
-      '--extractor-args', '"youtube:player_skip=webpage,configs"'
+      '--extractor-args', '"youtube:player_client=web,mweb,android"',
+      '--extractor-args', '"youtube:player_skip=webpage"',
+      '--extractor-args', '"youtube:skip=dash,hls"',
+      '--no-check-certificates',
+      '--prefer-free-formats'
     );
   }
   
@@ -121,6 +125,38 @@ async function executeYtDlp(args, options = {}) {
     return { success: true, output: stdout, error: stderr };
   } catch (error) {
     console.error('yt-dlp error:', error.message);
+    
+    // If YouTube bot detection, try alternative approach
+    if (options.isYoutube && error.message.includes('Sign in to confirm')) {
+      console.log('YouTube bot detection - trying alternative approach...');
+      
+      // Try with different player client
+      const altAntiBot = [
+        '--user-agent', '"Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15"',
+        '--extractor-args', '"youtube:player_client=ios"',
+        '--no-check-certificates'
+      ];
+      
+      const altCommand = `yt-dlp ${altAntiBot.join(' ')} ${sanitizedArgs.join(' ')}`;
+      console.log(`Trying alternative: ${altCommand}`);
+      
+      try {
+        const { stdout: altStdout, stderr: altStderr } = await execAsync(altCommand, { 
+          timeout: 120000,
+          maxBuffer: 10 * 1024 * 1024
+        });
+        
+        if (altStderr && !altStdout) {
+          throw new Error(altStderr);
+        }
+        
+        return { success: true, output: altStdout, error: altStderr };
+      } catch (altError) {
+        console.error('Alternative approach also failed:', altError.message);
+        return { success: false, error: error.message };
+      }
+    }
+    
     return { success: false, error: error.message };
   }
 }
