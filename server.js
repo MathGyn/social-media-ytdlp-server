@@ -85,9 +85,26 @@ function sanitizeCommand(input) {
   return input.replace(/[;&|`$(){}[\]]/g, '').replace(/'/g, "\\'");
 }
 
-async function executeYtDlp(args) {
+async function executeYtDlp(args, options = {}) {
   const sanitizedArgs = args.map(arg => sanitizeCommand(arg));
-  const command = `yt-dlp ${sanitizedArgs.join(' ')}`;
+  
+  // Add anti-bot measures for YouTube
+  const antiBot = [
+    '--user-agent', '"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"',
+    '--referer', '"https://www.google.com/"',
+    '--sleep-interval', '1',
+    '--max-sleep-interval', '3'
+  ];
+  
+  // Add extractor args for YouTube specifically
+  if (options.isYoutube) {
+    antiBot.push(
+      '--extractor-args', '"youtube:player_client=web,mweb"',
+      '--extractor-args', '"youtube:player_skip=webpage,configs"'
+    );
+  }
+  
+  const command = `yt-dlp ${antiBot.join(' ')} ${sanitizedArgs.join(' ')}`;
   
   console.log(`Executing: ${command}`);
   
@@ -161,7 +178,7 @@ app.post('/metadata', async (req, res) => {
       '--no-warnings',
       '--skip-download',
       `"${url}"`
-    ]);
+    ], { isYoutube: validation.platform === 'youtube' });
     
     if (!result.success) {
       return res.status(422).json({
@@ -253,7 +270,7 @@ app.post('/download', async (req, res) => {
       '--format', `"${formatSelector}"`,
       '--no-warnings',
       `"${url}"`
-    ]);
+    ], { isYoutube: validation.platform === 'youtube' });
     
     if (!result.success) {
       return res.status(422).json({
@@ -276,7 +293,7 @@ app.post('/download', async (req, res) => {
       '--dump-json',
       '--no-download',
       `"${url}"`
-    ]);
+    ], { isYoutube: validation.platform === 'youtube' });
     
     let mediaInfo = {
       title: `Conteúdo de ${validation.platform}`,
