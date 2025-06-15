@@ -32,12 +32,12 @@ RUN adduser -S nodejs -u 1001
 RUN chown -R nodejs:nodejs /app
 USER nodejs
 
-# Expose port
-EXPOSE 3000
+# Expose port (Railway uses PORT env var)
+EXPOSE $PORT
 
-# Health check
+# Health check - use PORT environment variable
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3000/health || exit 1
+  CMD curl -f http://localhost:${PORT:-3001}/health || exit 1
 
 # Start the application
 CMD ["node", "server.js"]

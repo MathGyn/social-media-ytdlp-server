@@ -7,7 +7,7 @@ const { RateLimiterMemory } = require('rate-limiter-flexible');
 
 const execAsync = promisify(exec);
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // Rate limiting
 const rateLimiter = new RateLimiterMemory({
